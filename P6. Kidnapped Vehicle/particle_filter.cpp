@@ -131,7 +131,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   
  	for(auto& p: particles){
       p.weight = 1.0;
-      vector<LandmarkObs> transformed;
+      
       double cos_theta = cos(p.theta);
       double sin_theta = sin(p.theta);
 
@@ -145,7 +145,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       }
 
     // transformation from p to map
-
+      vector<LandmarkObs> transformed;
+      
       for(const auto& o: observations){
       	LandmarkObs temp;
       	temp.x = o.x * cos_theta - o.y * sin_theta + p.x;
