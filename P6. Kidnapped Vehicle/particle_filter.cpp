@@ -30,7 +30,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
    * NOTE: Consult particle_filter.h for more information about this method 
    *   (and others in this file).
    */
-  num_particles = 100;  // TODO: Set the number of particles
+  num_particles = 30;  // TODO: Set the number of particles
   
   std::normal_distribution<double> dist_x(x, std[0]);
   std::normal_distribution<double> dist_y(y, std[1]);
@@ -70,19 +70,21 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
       p.x += velocity * delta_t * cos(p.theta);
       p.y += velocity * delta_t * sin(p.theta);
 
-    } else{  						//theta_dot != 0
+    } 
+    else{  							//theta_dot != 0
       p.x += velocity / yaw_rate * (sin(p.theta + yaw_rate*delta_t) - sin(p.theta));
       p.y += velocity / yaw_rate * (cos(p.theta) - cos(p.theta + yaw_rate*delta_t));
       p.theta += yaw_rate * delta_t;
     }
-      std::default_random_engine gen;
-	  std::normal_distribution<double> dist_x(p.x, std_pos[0]);
-	  std::normal_distribution<double> dist_y(p.y, std_pos[1]);
-	  std::normal_distribution<double> dist_theta(p.theta, std_pos[2]);
+    std::default_random_engine gen;
     
-      p.x = dist_x(gen);
-      p.y = dist_y(gen);
-      p.theta = dist_theta(gen);
+	std::normal_distribution<double> dist_x(p.x, std_pos[0]);
+	std::normal_distribution<double> dist_y(p.y, std_pos[1]);
+	std::normal_distribution<double> dist_theta(p.theta, std_pos[2]);
+    
+    p.x = dist_x(gen);
+    p.y = dist_y(gen);
+    p.theta = dist_theta(gen);
   }
 }
 
@@ -167,9 +169,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       	double w = exp(-(x + y)) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
       	p.weight *=  w;
       }
-      
 	  w_normalizer += p.weight;
-      weights.push_back(p.weight);
   }
   
   
@@ -195,6 +195,7 @@ void ParticleFilter::resample() {
 	std::uniform_int_distribution<int> index(0, num_particles - 1);
   
 	int current_index = index(gen);
+  
 	double beta = 0.0;
 	double mw2 = 2.0 * *max_element(weights.begin(), weights.end());
 	
@@ -209,7 +210,9 @@ void ParticleFilter::resample() {
 	
       p3.push_back(particles[current_index]);
 	}
+  
 	particles = p3;
+//     weights.clear();
   
 }
 
