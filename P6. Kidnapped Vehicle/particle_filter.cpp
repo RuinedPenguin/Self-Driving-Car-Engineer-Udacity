@@ -31,6 +31,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
    *   (and others in this file).
    */
   num_particles = 30;  // TODO: Set the number of particles
+  particles.resize(num_particles);
+  weights.resize(num_particles);
   
   std::normal_distribution<double> dist_x(x, std[0]);
   std::normal_distribution<double> dist_y(y, std[1]);
@@ -110,6 +112,27 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
       }
     }
   }
+//   for (int i = 0; i < observations.size(); i++) {
+// 	//Maximum distance can be square root of 2 times the range of sensor.
+// 		double min = sensor_range * sqrt(2);
+// 		int lid = -1;
+    
+// 		double ox = observations[i].x;
+// 		double oy = observations[i].y;
+
+// 		for (int j = 0; j < predicted.size(); j++) {
+// 		  double px = predicted[j].x;
+// 		  double py = predicted[j].y;
+// 		  int pid = predicted[j].id;
+// 		  double curr = dist(ox, oy, px, py);
+
+// 		  if (curr < min) {
+// 		    min = curr;
+// 		    lid = pid;
+// 		  }
+// 		}
+// 		observations[i].id = lid;
+// 	}
 }
 
 
@@ -129,19 +152,19 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-    double w_normalizer = 0.0;
+  double w_normalizer = 0.0;
   
- 	for(auto& p: particles){
-      p.weight = 1.0;
+  for(int i =0; i< particles.size(); i++){
+      particles[i].weight = 1.0;
       
-      double cos_theta = cos(p.theta);
-      double sin_theta = sin(p.theta);
+      double cos_theta = cos(particles[i].theta);
+      double sin_theta = sin(particles[i].theta);
 
     // collecting valid landmarks
       vector<LandmarkObs> predictions;
       
       for(const auto& l: map_landmarks.landmark_list){
-        double d = dist(p.x, p.y, l.x_f, l.y_f);
+        double d = dist(particles[i].x, particles[i].y, l.x_f, l.y_f);
       	if( d <= sensor_range)
         	predictions.push_back(LandmarkObs{l.id_i, l.x_f, l.y_f});
       }
@@ -151,8 +174,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
       for(const auto& o: observations){
       	LandmarkObs temp;
-      	temp.x = o.x * cos_theta - o.y * sin_theta + p.x;
-      	temp.y = o.x * sin_theta + o.y * cos_theta + p.y;
+      	temp.x = o.x * cos_theta - o.y * sin_theta + particles[i].x;
+      	temp.y = o.x * sin_theta + o.y * cos_theta + particles[i].y;
       	temp.id = o.id;
       
       	transformed.push_back(temp);
@@ -167,15 +190,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       	double x = pow(t.x - l.x_f, 2) / (2 * pow(std_landmark[0], 2));
       	double y = pow(t.y - l.y_f, 2) / (2 * pow(std_landmark[1], 2));
       	double w = exp(-(x + y)) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
-      	p.weight *=  w;
-      }
-	  w_normalizer += p.weight;
+      	particles[i].weight *=  w;
+      }	  
+    w_normalizer += particles[i].weight;
   }
   
   
-  for (auto& p: particles) {
-    p.weight /= w_normalizer;
-    weights.push_back(p.weight);
+  for (int i=0; i<particles.size(); i++) {
+    particles[i].weight /= w_normalizer;
+    weights.push_back(particles[i].weight);
   }
 }
 
